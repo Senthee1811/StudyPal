@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DocumentChunk {
+  id          String   @id @default(uuid())
+  documentId  String
+  userId      String
+  pageNumber  Int
+  chunkIndex  Int
+  content     String
+  tokenCount  Int
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([documentId, userId])
+  @@index([userId])
+  @@map("document_chunks")
+}
+
+model Summary {
+  id           String   @id @default(uuid())
+  documentId   String
+  userId       String
+  level        String   // 'SECTION' | 'DOCUMENT'
+  sectionTitle String?
+  content      String
+  sourcePages  Json?    // Array of page numbers
+  createdAt    DateTime @default(now())
+
+  @@index([documentId, userId])
+  @@map("summaries")
+}

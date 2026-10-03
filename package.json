@@ -1,0 +1,36 @@
+{
+  "name": "studypal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multilingual AI learning platform for Sri Lankan curriculum and competitive exams",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "turbo run db:generate",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3",
+    "prettier": "^3.5.2",
+    "@types/node": "^22.13.4",
+    "rimraf": "^6.0.1"
+  },
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "prisma",
+      "esbuild",
+      "@scarf/scarf",
+      "@turbo/windows-64"
+    ]
+  }
+}

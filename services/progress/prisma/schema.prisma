@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AnswerEvidence {
+  id            String   @id @default(uuid())
+  userId        String
+  attemptId     String
+  questionId    String
+  topicId       String
+  isCorrect     Boolean
+  marksObtained Float
+  maxMarks      Float
+  createdAt     DateTime @default(now())
+
+  @@index([userId, topicId])
+  @@map("answer_evidence")
+}
+
+model TopicMastery {
+  id            String   @id @default(uuid())
+  userId        String
+  topicId       String
+  evidenceCount Int      @default(0)
+  correctCount  Int      @default(0)
+  masteryScore  Float    @default(50.0) // 0 - 100%
+  confidence    Float    @default(0.0)  // 0.0 - 1.0
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, topicId])
+  @@index([userId])
+  @@map("topic_mastery")
+}
+
+model Recommendation {
+  id          String   @id @default(uuid())
+  userId      String
+  topicId     String
+  priority    String   // 'HIGH' | 'MEDIUM' | 'LOW'
+  reason      String
+  actionTitle String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("recommendations")
+}

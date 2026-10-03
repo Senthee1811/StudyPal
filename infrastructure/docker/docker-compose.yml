@@ -1,0 +1,264 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: studypal-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: studypal_identity
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: studypal-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: studypal-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MinIO Bucket Auto-creator
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb --ignore-existing local/studypal-documents;
+      /usr/bin/mc anonymous set download local/studypal-documents;
+      exit 0;
+      "
+
+  # API Gateway (Only service exposing public port 8000)
+  gateway:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: gateway
+    container_name: studypal-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      WEB_ORIGIN: http://localhost:3000
+      JWT_ACCESS_SECRET: studypal_dev_access_token_secret_which_is_very_secure_32bytes
+      JWT_REFRESH_SECRET: studypal_dev_refresh_token_secret_which_is_very_secure_32bytes
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      IDENTITY_SERVICE_URL: http://identity-service:8001
+      CONTENT_SERVICE_URL: http://content-service:8002
+      DOCUMENT_SERVICE_URL: http://document-service:8003
+      KNOWLEDGE_SERVICE_URL: http://knowledge-service:8004
+      AI_SERVICE_URL: http://ai-service:8005
+      ASSESSMENT_SERVICE_URL: http://assessment-service:8006
+      PROGRESS_SERVICE_URL: http://progress-service:8007
+      TUTOR_SERVICE_URL: http://tutor-service:8008
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+      - identity-service
+
+  identity-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: identity
+    container_name: studypal-identity
+    restart: unless-stopped
+    environment:
+      PORT: 8001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_identity?schema=public
+      JWT_ACCESS_SECRET: studypal_dev_access_token_secret_which_is_very_secure_32bytes
+      JWT_REFRESH_SECRET: studypal_dev_refresh_token_secret_which_is_very_secure_32bytes
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  content-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: content
+    container_name: studypal-content
+    restart: unless-stopped
+    environment:
+      PORT: 8002
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_content?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  document-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: document
+    container_name: studypal-document
+    restart: unless-stopped
+    environment:
+      PORT: 8003
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_document?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET_NAME: studypal-documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  ai-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: ai
+    container_name: studypal-ai
+    restart: unless-stopped
+    environment:
+      PORT: 8005
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_ai?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+      AI_PROVIDER: mock
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  knowledge-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: knowledge
+    container_name: studypal-knowledge
+    restart: unless-stopped
+    environment:
+      PORT: 8004
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_knowledge?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+      AI_SERVICE_URL: http://ai-service:8005
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET_NAME: studypal-documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+
+  assessment-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: assessment
+    container_name: studypal-assessment
+    restart: unless-stopped
+    environment:
+      PORT: 8006
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_assessment?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+      KNOWLEDGE_SERVICE_URL: http://knowledge-service:8004
+      AI_SERVICE_URL: http://ai-service:8005
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  progress-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: progress
+    container_name: studypal-progress
+    restart: unless-stopped
+    environment:
+      PORT: 8007
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_progress?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  tutor-service:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_NAME: tutor
+    container_name: studypal-tutor
+    restart: unless-stopped
+    environment:
+      PORT: 8008
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/studypal_tutor?schema=public
+      INTERNAL_SERVICE_SECRET: studypal_dev_internal_service_hmac_secret_32bytes_min
+      REDIS_URL: redis://redis:6379
+      KNOWLEDGE_SERVICE_URL: http://knowledge-service:8004
+      AI_SERVICE_URL: http://ai-service:8005
+      ASSESSMENT_SERVICE_URL: http://assessment-service:8006
+      PROGRESS_SERVICE_URL: http://progress-service:8007
+      VAPI_API_KEY: vapi_mock_key_development
+      VAPI_ASSISTANT_ID: vapi_mock_assistant_id
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:

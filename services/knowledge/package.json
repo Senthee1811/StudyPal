@@ -1,0 +1,37 @@
+{
+  "name": "@studypal/knowledge-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "start:worker": "node dist/worker/document-worker.js",
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "test": "node --test dist/**/*.spec.js || tsc"
+  },
+  "dependencies": {
+    "@studypal/types": "workspace:*",
+    "@studypal/contracts": "workspace:*",
+    "@studypal/config": "workspace:*",
+    "@studypal/service-kit": "workspace:*",
+    "@studypal/messaging": "workspace:*",
+    "@nestjs/common": "^11.0.10",
+    "@nestjs/core": "^11.0.10",
+    "@nestjs/platform-express": "^11.0.10",
+    "@nestjs/swagger": "^11.0.6",
+    "@prisma/client": "^6.4.1",
+    "@aws-sdk/client-s3": "^3.758.0",
+    "axios": "^1.7.9",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "prisma": "^6.4.1",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.3"
+  }
+}

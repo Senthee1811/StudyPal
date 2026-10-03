@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UsageQuota {
+  id           String   @id @default(uuid())
+  userId       String
+  date         String   // YYYY-MM-DD
+  tokensUsed   Int      @default(0)
+  requestCount Int      @default(0)
+  costUsd      Float    @default(0.0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("usage_quotas")
+}

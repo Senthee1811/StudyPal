@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuestionStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum FeatureCategory {
+  RIVER
+  MOUNTAIN
+  HISTORICAL
+  PROVINCE
+  CITY
+}
+
+model CurriculumVersion {
+  id        String    @id @default(uuid())
+  name      String
+  year      Int
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  subjects  Subject[]
+
+  @@map("curriculum_versions")
+}
+
+model Subject {
+  id                  String            @id @default(uuid())
+  curriculumVersionId String
+  curriculumVersion   CurriculumVersion @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  code                String
+  nameEn              String
+  nameSi              String
+  nameTa              String
+  grade               Int
+  icon                String?
+  createdAt           DateTime          @default(now())
+  topics              Topic[]
+
+  @@map("subjects")
+}
+
+model Topic {
+  id          String     @id @default(uuid())
+  subjectId   String
+  subject     Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  conceptId   String     // Shared across languages (si, ta, en)
+  language    String     // 'si' | 'ta' | 'en'
+  name        String
+  description String?
+  orderIndex  Int        @default(0)
+  createdAt   DateTime   @default(now())
+  questions   Question[]
+
+  @@index([conceptId])
+  @@index([subjectId, language])
+  @@map("topics")
+}
+
+model Question {
+  id           String         @id @default(uuid())
+  topicId      String
+  topic        Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  language     String
+  type         String         // 'MCQ' | 'SHORT_ANSWER' | 'STRUCTURED'
+  prompt       String
+  options      Json?          // Array of string options for MCQ
+  correctAnswer String
+  explanation  String
+  difficulty   String         // 'EASY' | 'MEDIUM' | 'HARD'
+  marks        Float          @default(1.0)
+  status       QuestionStatus @default(APPROVED)
+  reviewerId   String?
+  reviewNotes  String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([topicId, status])
+  @@map("questions")
+}
+
+model MapFeature {
+  id            String          @id @default(uuid())
+  nameEn        String
+  nameSi        String
+  nameTa        String
+  category      FeatureCategory
+  latitude      Float
+  longitude     Float
+  descriptionEn String?
+  descriptionSi String?
+  descriptionTa String?
+  createdAt     DateTime        @default(now())
+  questions     MapQuestion[]
+
+  @@map("map_features")
+}
+
+model MapQuestion {
+  id           String     @id @default(uuid())
+  mapFeatureId String
+  mapFeature   MapFeature @relation(fields: [mapFeatureId], references: [id], onDelete: Cascade)
+  promptEn     String
+  promptSi     String
+  promptTa     String
+  toleranceKm  Float      @default(25.0) // Allowed distance radius in km
+  marks        Float      @default(2.0)
+  createdAt    DateTime   @default(now())
+
+  @@map("map_questions")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  action     String
+  performedBy String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}
