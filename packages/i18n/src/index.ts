@@ -33,12 +33,16 @@ export interface TranslationDictionary {
   };
   nav: {
     dashboard: string;
+    curriculum: string;
     library: string;
+    studyRoom: string;
+    practice: string;
+    mapLab: string;
+    progress: string;
+    admin: string;
     tutor: string;
     exams: string;
-    progress: string;
     geography: string;
-    admin: string;
   };
   library: {
     title: string;
@@ -122,12 +126,16 @@ export const translations: Record<SupportedLocale, TranslationDictionary> = {
     },
     nav: {
       dashboard: 'Dashboard',
-      library: 'Study Library',
-      tutor: 'AI Tutor',
-      exams: 'Exams & Quizzes',
-      progress: 'Mastery Progress',
-      geography: 'Sri Lanka Geography',
+      curriculum: 'Curriculum',
+      library: 'My Library',
+      studyRoom: 'AI Study Room',
+      practice: 'Practice & Exams',
+      mapLab: 'Map Lab',
+      progress: 'Progress',
       admin: 'Content Review',
+      tutor: 'AI Study Room',
+      exams: 'Practice & Exams',
+      geography: 'Map Lab',
     },
     library: {
       title: 'Study Materials & Textbooks',
@@ -209,12 +217,16 @@ export const translations: Record<SupportedLocale, TranslationDictionary> = {
     },
     nav: {
       dashboard: 'මුල් පිටුව',
-      library: 'පොත් හා සටහන්',
-      tutor: 'AI ගුරු සහකරු',
-      exams: 'විභාග සහ ප්‍රශ්නාවලි',
-      progress: 'ප්‍රගතිය සහ දක්ෂතාව',
-      geography: 'ශ්‍රී ලංකා භූගෝල විද්‍යාව',
+      curriculum: 'විෂය නිර්දේශය',
+      library: 'මගේ පුස්තකාලය',
+      studyRoom: 'AI අධ්‍යයන කාමරය',
+      practice: 'පුහුණුව සහ විභාග',
+      mapLab: 'සිතියම් විද්‍යාගාරය',
+      progress: 'ප්‍රගතිය',
       admin: 'පරිපාලන සමාලෝචනය',
+      tutor: 'AI අධ්‍යයන කාමරය',
+      exams: 'පුහුණුව සහ විභාග',
+      geography: 'සිතියම් විද්‍යාගාරය',
     },
     library: {
       title: 'පාසල් පෙළපොත් සහ සටහන්',
@@ -296,12 +308,16 @@ export const translations: Record<SupportedLocale, TranslationDictionary> = {
     },
     nav: {
       dashboard: 'முகப்பு',
-      library: 'பாடநூல்கள் & குறிப்புகள்',
-      tutor: 'AI ஆசிரியர்',
-      exams: 'பரீட்சைகள்',
-      progress: 'தேர்ச்சி அறிக்கை',
-      geography: 'இலங்கை புவியியல் வரைபடம்',
+      curriculum: 'பாடத்திட்டம்',
+      library: 'என் நூலகம்',
+      studyRoom: 'AI கற்றல் அறை',
+      practice: 'பயிற்சி & பரீட்சைகள்',
+      mapLab: 'வரைபட ஆய்வகம்',
+      progress: 'முன்னேற்றம்',
       admin: 'நிர்வாக ஆய்வு',
+      tutor: 'AI கற்றல் அறை',
+      exams: 'பயிற்சி & பரீட்சைகள்',
+      geography: 'வரைபட ஆய்வகம்',
     },
     library: {
       title: 'பாடநூல்கள் & ஆவணங்கள்',

@@ -22,3 +22,44 @@ model UsageQuota {
   @@index([userId, date])
   @@map("usage_quotas")
 }
+
+model AiUsageLog {
+  id               String   @id @default(uuid())
+  traceId          String
+  userId           String
+  task             String   // CHAT | SUMMARY | GROUNDED_QA | QUESTION_GEN | EMBEDDING | STRUCTURED
+  provider         String   // MOCK | OPENAI | GEMINI | OLLAMA
+  model            String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  costUsd          Float    @default(0.0)
+  latencyMs        Int      @default(0)
+  status           String   // SUCCESS | FALLBACK | ERROR
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+
+  @@index([userId, task])
+  @@index([traceId])
+  @@index([createdAt])
+  @@map("ai_usage_logs")
+}
+
+model RouterConfig {
+  id                String   @id @default(uuid())
+  task              String   // default | chat | grounded-qa | quiz-gen | summary | embed
+  language          String   // all | si | ta | en
+  primaryProvider   String   // MOCK | OPENAI | GEMINI | OLLAMA
+  primaryModel      String
+  fallbackProviders String[] // ["OPENAI", "MOCK"]
+  timeoutMs         Int      @default(15000)
+  maxRetries        Int      @default(2)
+  temperature       Float    @default(0.7)
+  cacheTtlSec       Int      @default(0)
+  enabled           Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([task, language])
+  @@map("router_configs")
+}

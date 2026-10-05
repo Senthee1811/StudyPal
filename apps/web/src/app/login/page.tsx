@@ -4,7 +4,16 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../context/language-context';
 import { useAuth } from '../../context/auth-context';
-import { BookOpen, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  DisplayHeading,
+  Highlight,
+  Badge,
+  Card,
+  Button,
+  Logo,
+  MicroLabel,
+} from '../../components/ui';
+import { ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,7 +24,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [grade, setGrade] = useState(9);
+  const [grade, setGrade] = useState(11);
   const [parentConsent, setParentConsent] = useState(true);
 
   const [error, setError] = useState<string | null>(null);
@@ -52,72 +61,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-10 px-4 sm:px-0">
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-100 space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-md shadow-indigo-200">
-            <BookOpen className="w-6 h-6" />
+    <div className="max-w-md mx-auto py-8 px-4 sm:px-0">
+      <Card className="p-8 border-pencil-gray/40 space-y-6">
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <Logo />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-[24px] font-bold text-forest-ink font-sans">
             {isRegister ? t.auth.registerTitle : t.auth.loginTitle}
           </h1>
-          <p className="text-xs text-slate-500">{t.common.tagline}</p>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="flex bg-slate-100 p-1 rounded-xl">
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegister(false);
-              setError(null);
-            }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-              !isRegister ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            {t.auth.loginButton}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegister(true);
-              setError(null);
-            }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-              isRegister ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600'
-            }`}
-          >
-            {t.auth.registerButton}
-          </button>
+          <p className="text-[13px] text-forest-ink/65">
+            Sri Lanka National Curriculum AI Platform
+          </p>
         </div>
 
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start space-x-2.5 text-xs text-rose-700">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{error}</span>
+          <div className="p-3 bg-terracotta/10 border border-terracotta/30 rounded-btn flex items-start gap-2 text-forest-ink text-[12px]">
+            <AlertCircle className="w-4 h-4 text-terracotta shrink-0 mt-0.5" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isRegister && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                {t.auth.displayName}
-              </label>
-              <input
-                type="text"
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="e.g. Kasun Perera"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-[12px] font-semibold text-forest-ink mb-1">
+                  {t.auth.displayName}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="e.g. Kasun Perera"
+                  className="w-full px-3.5 py-2.5 bg-white border border-pencil-gray/40 rounded-btn text-[14px] text-forest-ink focus:outline-none focus:border-forest-ink"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-semibold text-forest-ink mb-1">
+                  {t.auth.grade}
+                </label>
+                <select
+                  value={grade}
+                  onChange={(e) => setGrade(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 bg-white border border-pencil-gray/40 rounded-btn text-[14px] text-forest-ink focus:outline-none focus:border-forest-ink"
+                >
+                  {[6, 7, 8, 9, 10, 11, 12, 13].map((g) => (
+                    <option key={g} value={g}>
+                      Grade {g} {g === 11 ? '(O/L)' : g === 13 ? '(A/L)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-[12px] font-semibold text-forest-ink mb-1">
               {t.auth.email}
             </label>
             <input
@@ -125,13 +127,13 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="student@example.com"
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+              placeholder="student@school.lk"
+              className="w-full px-3.5 py-2.5 bg-white border border-pencil-gray/40 rounded-btn text-[14px] text-forest-ink focus:outline-none focus:border-forest-ink"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-[12px] font-semibold text-forest-ink mb-1">
               {t.auth.password}
             </label>
             <input
@@ -140,77 +142,51 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+              className="w-full px-3.5 py-2.5 bg-white border border-pencil-gray/40 rounded-btn text-[14px] text-forest-ink focus:outline-none focus:border-forest-ink"
             />
           </div>
 
           {isRegister && (
-            <>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  {t.auth.grade}
-                </label>
-                <select
-                  value={grade}
-                  onChange={(e) => setGrade(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                >
-                  <option value={6}>Grade 6 (ශ්‍රේණිය 6 / தரம் 6)</option>
-                  <option value={7}>Grade 7 (ශ්‍රේණිය 7 / தரம் 7)</option>
-                  <option value={8}>Grade 8 (ශ්‍රේණිය 8 / தரம் 8)</option>
-                  <option value={9}>Grade 9 (ශ්‍රේණිය 9 / தரம் 9)</option>
-                  <option value={10}>Grade 10 - O/L (සාමාන්‍ය පෙළ)</option>
-                  <option value={11}>Grade 11 - O/L (සාමාන්‍ය පෙළ)</option>
-                  <option value={12}>Grade 12 - A/L (උසස් පෙළ)</option>
-                  <option value={13}>Grade 13 - A/L (උසස් පෙළ)</option>
-                </select>
-              </div>
-
-              {/* Minor Parental Consent Checkbox */}
-              <div className="flex items-start space-x-2.5 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-                <input
-                  type="checkbox"
-                  id="consent"
-                  checked={parentConsent}
-                  onChange={(e) => setParentConsent(e.target.checked)}
-                  className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="consent" className="text-xs text-indigo-950/80 leading-snug">
-                  I confirm parental / guardian consent for this student learning account.
-                </label>
-              </div>
-            </>
+            <div className="flex items-start gap-2 p-3 bg-highlighter-yellow/20 rounded-btn border border-highlighter-yellow/30">
+              <input
+                type="checkbox"
+                id="consent"
+                checked={parentConsent}
+                onChange={(e) => setParentConsent(e.target.checked)}
+                className="mt-0.5 rounded accent-forest-ink"
+              />
+              <label htmlFor="consent" className="text-[11px] text-forest-ink/75 leading-tight">
+                {t.auth.consentNotice}
+              </label>
+            </div>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-100 transition-all flex items-center justify-center space-x-2"
+            variant="primary"
+            className="w-full justify-center"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{t.common.loading}</span>
-              </>
-            ) : (
-              <span>{isRegister ? t.auth.registerButton : t.auth.loginButton}</span>
-            )}
-          </button>
+            {loading
+              ? 'Authenticating...'
+              : isRegister
+              ? t.auth.registerButton
+              : t.auth.loginButton}
+          </Button>
         </form>
 
-        <div className="pt-2 text-center">
+        <div className="text-center pt-2 border-t border-pencil-gray/20">
           <button
-            type="button"
             onClick={() => {
               setIsRegister(!isRegister);
               setError(null);
             }}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+            className="text-[13px] font-semibold text-forest-ink hover:underline"
           >
             {isRegister ? t.auth.hasAccount : t.auth.noAccount}
           </button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

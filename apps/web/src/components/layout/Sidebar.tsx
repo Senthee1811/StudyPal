@@ -7,26 +7,32 @@ import { useLanguage } from '../../context/language-context';
 import { useAuth } from '../../context/auth-context';
 import {
   LayoutDashboard,
-  BookOpen,
-  Bot,
+  BookMarked,
+  Library,
+  BrainCircuit,
   GraduationCap,
+  Map,
   TrendingUp,
-  MapPin,
   ShieldCheck,
 } from 'lucide-react';
 
+/**
+ * Sidebar — cream background, forest-ink text, yellow highlight wash on active tab.
+ * Matches the 7-section IA + optional admin link.
+ */
 export function Sidebar() {
   const pathname = usePathname();
   const { t } = useLanguage();
   const { user } = useAuth();
 
   const navItems = [
-    { href: '/', label: t.nav.dashboard, icon: LayoutDashboard },
-    { href: '/library', label: t.nav.library, icon: BookOpen },
-    { href: '/tutor', label: t.nav.tutor, icon: Bot },
-    { href: '/exams', label: t.nav.exams, icon: GraduationCap },
-    { href: '/progress', label: t.nav.progress, icon: TrendingUp },
-    { href: '/geography', label: t.nav.geography, icon: MapPin },
+    { href: '/dashboard',  label: t.nav.dashboard,  icon: LayoutDashboard },
+    { href: '/curriculum', label: t.nav.curriculum,  icon: BookMarked },
+    { href: '/library',    label: t.nav.library,     icon: Library },
+    { href: '/study-room', label: t.nav.studyRoom,   icon: BrainCircuit },
+    { href: '/practice',   label: t.nav.practice,    icon: GraduationCap },
+    { href: '/map-lab',    label: t.nav.mapLab,      icon: Map },
+    { href: '/progress',   label: t.nav.progress,    icon: TrendingUp },
   ];
 
   if (user?.role === 'ADMIN' || user?.role === 'CONTENT_REVIEWER') {
@@ -34,31 +40,37 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col shrink-0 min-h-[calc(100vh-4rem)]">
-      <nav className="p-4 space-y-1.5 flex-1">
+    <aside className="w-60 bg-cream-paper border-r border-pencil-gray/30 hidden md:flex flex-col shrink-0 min-h-[calc(100vh-4.5rem)]">
+      <nav className="p-3 space-y-0.5 flex-1" aria-label="Sidebar navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-card text-[14px] font-medium transition-all ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-highlighter-yellow/30 text-forest-ink font-semibold'
+                  : 'text-forest-ink/60 hover:text-forest-ink hover:bg-whisper-gray'
               }`}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+              <Icon
+                className={`w-[18px] h-[18px] ${
+                  isActive ? 'text-forest-ink' : 'text-forest-ink/40'
+                }`}
+                aria-hidden="true"
+              />
               <span className="truncate">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Privacy Notice Box for Sri Lankan Students & Minors */}
-      <div className="p-4 m-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
-        <p className="text-xs text-indigo-900/80 font-medium leading-relaxed">
+      {/* Privacy notice */}
+      <div className="p-3 m-3 bg-highlighter-yellow/15 rounded-card border border-highlighter-yellow/30">
+        <p className="text-[11px] text-forest-ink/60 font-medium leading-relaxed font-mono">
           {t.auth.consentNotice}
         </p>
       </div>

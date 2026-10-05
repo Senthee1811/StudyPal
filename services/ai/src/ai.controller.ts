@@ -3,11 +3,36 @@ import { AiService } from './ai.service.js';
 import { InternalAuthGuard, CurrentUser } from '@studypal/service-kit';
 import { InternalAuthContext } from '@studypal/types';
 import { GenerateQuestionsOptions, GroundedQaOptions } from './providers/ai-provider.interface.js';
+import {
+  GatewayChatRequest,
+  GatewayEmbedRequest,
+  GatewayStructuredRequest,
+} from './gateway/llm-provider.interface.js';
 
 @Controller('ai')
 @UseGuards(InternalAuthGuard)
 export class AiController {
   constructor(private readonly aiService: AiService) {}
+
+  // ---------------------------------------------------------------------------
+  // Unified Gateway Endpoints
+  // ---------------------------------------------------------------------------
+
+  @Post('chat')
+  async chat(@CurrentUser() user: InternalAuthContext, @Body() body: GatewayChatRequest) {
+    const data = await this.aiService.chat({ ...body, userId: user?.userId });
+    return { success: true, data };
+  }
+
+  @Post('embed')
+  async embed(@Body() body: GatewayEmbedRequest) {
+    const data = await this.aiService.embed(body);
+    return { success: true, data };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Domain Specific Endpoints
+  // ---------------------------------------------------------------------------
 
   @Post('generate-questions')
   async generateQuestions(

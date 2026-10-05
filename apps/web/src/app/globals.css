@@ -1,34 +1,240 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap');
+/* ============================================================================
+   StudyPal Global Styles — "Say Briefly" Design System
+   ============================================================================ */
+
+/* --- Fonts ---------------------------------------------------------------- */
+/* Bricolage Grotesque 800 (display headlines ≥ 40px only) & Nunito (Duolingo style rounded display) */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&family=Nunito:wght@700;800;900&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400&family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
-  --background-end-rgb: 241, 245, 249;
+/* --- Base Layer ----------------------------------------------------------- */
+@layer base {
+  :root {
+    /* Semantic CSS custom properties for easy dark-theme override later */
+    --color-canvas:         #fcfaf5;  /* cream-paper */
+    --color-ink:            #1a3300;  /* forest-ink */
+    --color-highlight:      #ffe95c;  /* highlighter-yellow */
+    --color-hairline:       #b6b6b6;  /* pencil-gray */
+    --color-whisper:        #f1f1f1;  /* whisper-gray */
+    --color-teal:           #a8e5e5;
+    --color-mint:           #d5f5c2;
+    --color-blush:          #f6d0ff;
+    --color-terracotta:     #cb5521;
+
+    --font-display:   'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+    --font-body:      'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, sans-serif;
+    --font-mono:      'Roboto Mono', ui-monospace, monospace;
+
+    --radius-btn:     6px;
+    --radius-card:    12px;
+    --radius-nav:     16px;
+    --radius-tag:     9999px;
+
+    --shadow-btn:     0 1px 2px rgba(0, 0, 0, 0.05);
+
+    --max-width:      1200px;
+  }
+
+  html {
+    font-size: 18px;          /* Body base = 18px */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* Never use pure black for text */
+  h1, h2, h3, h4, h5, h6, p, span, a, li, td, th, label {
+    color: var(--color-ink);
+  }
+
+  /* Sinhala script — adjusted line-height */
+  :lang(si), [data-lang="si"] {
+    font-family: 'Noto Sans Sinhala', 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* Tamil script — adjusted line-height */
+  :lang(ta), [data-lang="ta"] {
+    font-family: 'Noto Sans Tamil', 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* Focus ring — forest-ink, visible, accessible */
+  *:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* Touch targets — minimum 44px on mobile */
+  @media (pointer: coarse) {
+    button, a, [role="button"], input, select, textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  min-height: 100vh;
-  font-family: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, sans-serif;
+/* --- Component Layer ------------------------------------------------------ */
+@layer components {
+  /* ── Primary Button ────────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center gap-2
+           px-[19px] py-[10px]
+           bg-forest-ink text-cream-paper
+           font-sans text-[16px] font-medium
+           rounded-btn
+           shadow-btn
+           transition-all duration-150
+           hover:opacity-90
+           active:scale-[0.98];
+  }
+
+  .btn-primary-compact {
+    @apply inline-flex items-center gap-1.5
+           px-[12px] py-[5px]
+           bg-forest-ink text-cream-paper
+           font-sans text-[14px] font-medium
+           rounded-btn
+           shadow-btn
+           transition-all duration-150
+           hover:opacity-90
+           active:scale-[0.98];
+  }
+
+  /* ── Outline Button ────────────────────────────────────────────────────── */
+  .btn-outline {
+    @apply inline-flex items-center gap-2
+           px-[19px] py-[10px]
+           bg-transparent text-forest-ink
+           border border-forest-ink
+           font-sans text-[14px] font-medium
+           rounded-btn
+           transition-all duration-150
+           hover:bg-forest-ink hover:text-cream-paper
+           active:scale-[0.98];
+  }
+
+  /* ── Pastel Accent Buttons ─────────────────────────────────────────────── */
+  .btn-mint {
+    @apply inline-flex items-center gap-2
+           px-[19px] py-[10px]
+           bg-sticky-mint text-forest-ink
+           font-sans text-[14px] font-medium
+           rounded-btn
+           transition-all duration-150
+           hover:brightness-95
+           active:scale-[0.98];
+  }
+
+  .btn-teal {
+    @apply inline-flex items-center gap-2
+           px-[19px] py-[10px]
+           bg-sticky-teal text-forest-ink
+           font-sans text-[14px] font-medium
+           rounded-btn
+           transition-all duration-150
+           hover:brightness-95
+           active:scale-[0.98];
+  }
+
+  .btn-blush {
+    @apply inline-flex items-center gap-2
+           px-[19px] py-[10px]
+           bg-sticky-blush text-forest-ink
+           font-sans text-[14px] font-medium
+           rounded-btn
+           transition-all duration-150
+           hover:brightness-95
+           active:scale-[0.98];
+  }
+
+  /* ── Highlighted Word (yellow wash in display headings) ─────────────── */
+  .highlight {
+    @apply bg-highlighter-yellow/40 px-1 -mx-0.5
+           decoration-clone rounded-sm;
+  }
+
+  /* ── Tagline Badge ─────────────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1.5
+           px-3 py-1
+           bg-highlighter-yellow text-forest-ink
+           font-sans text-[12px] font-medium
+           rounded-tag;
+  }
+
+  .badge-sm {
+    @apply inline-flex items-center gap-1
+           px-2 py-0.5
+           bg-highlighter-yellow text-forest-ink
+           font-mono text-micro font-normal
+           rounded-tag;
+  }
+
+  /* ── Sticky-Note Card ──────────────────────────────────────────────────── */
+  .card {
+    @apply bg-cream-paper rounded-card p-3
+           border border-pencil-gray/30;
+  }
+
+  .card-mint    { @apply card bg-sticky-mint; }
+  .card-teal    { @apply card bg-sticky-teal; }
+  .card-blush   { @apply card bg-sticky-blush; }
+  .card-bordered { @apply card border-forest-ink; }
+
+  /* ── Display Heading (Bricolage Grotesque) ─────────────────────────────── */
+  .text-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.0;
+  }
+
+  /* ── Micro Label (Roboto Mono) ─────────────────────────────────────────── */
+  .text-micro-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Section headings ──────────────────────────────────────────────────── */
+  .section-heading {
+    @apply font-sans text-heading-sm font-bold text-forest-ink;
+  }
+
+  /* ── Max-width content container ───────────────────────────────────────── */
+  .container-layout {
+    @apply max-w-layout mx-auto px-3 sm:px-4;
+  }
 }
 
-/* Ensure Sinhala and Tamil scripts display cleanly */
-:lang(si) {
-  font-family: 'Noto Sans Sinhala', 'Inter', sans-serif;
-  line-height: 1.6;
-}
+/* --- Utility Layer -------------------------------------------------------- */
+@layer utilities {
+  /* Ink hairline border */
+  .border-hairline {
+    border-width: 1px;
+    border-color: var(--color-hairline);
+  }
 
-:lang(ta) {
-  font-family: 'Noto Sans Tamil', 'Inter', sans-serif;
-  line-height: 1.6;
+  /* Section gap */
+  .gap-section {
+    gap: 64px;
+  }
+
+  /* Paragraph max-width (don't center-align > 640px) */
+  .prose-constrained {
+    max-width: 640px;
+  }
 }

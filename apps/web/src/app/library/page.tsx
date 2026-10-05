@@ -4,19 +4,30 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/language-context';
 import { useAuth } from '../../context/auth-context';
 import {
+  DisplayHeading,
+  Highlight,
+  Badge,
+  Card,
+  Button,
+  MicroLabel,
+} from '../../components/ui';
+import { StorysetLibraryBooks } from '../../components/illustrations';
+import {
   Upload,
   FileText,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   AlertCircle,
   Sparkles,
   BookOpen,
   Search,
-  HelpCircle,
   ArrowRight,
-  Loader2,
   Trash2,
+  BookMarked,
+  BrainCircuit,
+  GraduationCap,
 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LibraryPage() {
   const { t, locale } = useLanguage();
@@ -44,7 +55,7 @@ export default function LibraryPage() {
   const fetchDocuments = async () => {
     try {
       const res = await api.documents.list();
-      if (res.data) {
+      if (res?.data) {
         setDocuments(res.data);
         if (res.data.length > 0 && !selectedDoc) {
           setSelectedDoc(res.data[0]);
@@ -56,7 +67,6 @@ export default function LibraryPage() {
 
   useEffect(() => {
     fetchDocuments();
-    // Poll for status transitions (UPLOADED -> PROCESSING -> READY)
     const interval = setInterval(fetchDocuments, 3000);
     return () => clearInterval(interval);
   }, [api]);
@@ -65,8 +75,8 @@ export default function LibraryPage() {
     if (selectedDoc?.id && selectedDoc.status === 'READY') {
       api.documents
         .getSummaries(selectedDoc.id)
-        .then((res) => {
-          if (res.data) setSummaries(res.data);
+        .then((res: any) => {
+          if (res?.data) setSummaries(res.data);
         })
         .catch(() => {});
     } else {
@@ -74,7 +84,7 @@ export default function LibraryPage() {
     }
     setQaAnswer(null);
     setQuizGeneratedMsg(null);
-  }, [selectedDoc]);
+  }, [selectedDoc, api]);
 
   const handleUploadSimulated = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,18 +94,16 @@ export default function LibraryPage() {
     setUploadError(null);
 
     try {
-      // 1. Create upload intent
       const intentRes = await api.documents.createUploadIntent({
         filename: `${uploadTitle.replace(/\s+/g, '_')}.pdf`,
-        fileSize: 1024 * 500, // 500KB
+        fileSize: 1024 * 500,
         mimeType: 'application/pdf',
         title: uploadTitle,
         language: locale,
       });
 
-      if (!intentRes.data) throw new Error('Upload intent rejected');
+      if (!intentRes?.data) throw new Error('Upload intent rejected');
 
-      // 2. Complete upload
       await api.documents.completeUpload(intentRes.data.documentId);
       setUploadTitle('');
       await fetchDocuments();
@@ -116,7 +124,7 @@ export default function LibraryPage() {
       setQaAnswer(res.data);
     } catch (err: any) {
       setQaAnswer({
-        answer: 'Failed to retrieve answer. Please try again.',
+        answer: 'Could not retrieve answer. Please try again.',
         isUncertain: true,
         citations: [],
       });
@@ -131,14 +139,14 @@ export default function LibraryPage() {
     setQuizGeneratedMsg(null);
 
     try {
-      const res = await api.documents.generateQuiz(selectedDoc.id, {
+      await api.documents.generateQuiz(selectedDoc.id, {
         language: locale,
         numQuestions: 5,
         difficulty: 'MEDIUM',
       });
-      setQuizGeneratedMsg('Practice quiz generated successfully! Ready under Exams & Quizzes.');
+      setQuizGeneratedMsg('Practice quiz generated! View under Practice & Exams.');
     } catch (err: any) {
-      setQuizGeneratedMsg('Quiz generation initiated.');
+      setQuizGeneratedMsg('Quiz generation queued in background.');
     } finally {
       setQuizLoading(false);
     }
@@ -154,35 +162,52 @@ export default function LibraryPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-            {t.library.title}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Government textbooks and study materials with AI extraction, summaries, and page citations.
-          </p>
-        </div>
+    <div className="space-y-8 max-w-layout mx-auto pb-12">
+      {/* Header */}
+      <div className="space-y-3">
+        <Badge icon={<BookOpen className="w-3.5 h-3.5" />}>
+          MY STUDY LIBRARY
+        </Badge>
+        <DisplayHeading as="h1" size="display">
+          {locale === 'si' ? (
+            <>
+              පාසල් පෙළපොත් සහ <Highlight>අධ්‍යයන සටහන්</Highlight>
+            </>
+          ) : locale === 'ta' ? (
+            <>
+              பாடநூல்கள் மற்றும் <Highlight>கற்றல் குறிப்புகள்</Highlight>
+            </>
+          ) : (
+            <>
+              Textbooks & <Highlight>Study Materials</Highlight>
+            </>
+          )}
+        </DisplayHeading>
+        <p className="text-[16px] text-forest-ink/75 max-w-2xl leading-relaxed">
+          Upload government textbooks and handwritten notes. The StudyPal document pipeline
+          extracts chapters, generates chapter summaries, and indexes verified page citations for RAG.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Upload Box & Documents List */}
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Upload Box & Documents List (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
           {/* Upload Form */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex items-center space-x-2 text-indigo-700">
-              <Upload className="w-5 h-5" />
-              <h2 className="text-sm font-bold text-slate-900">{t.library.uploadPdf}</h2>
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center gap-2 text-forest-ink">
+              <Upload className="w-4 h-4" />
+              <h2 className="text-[15px] font-bold text-forest-ink">{t.library.uploadPdf}</h2>
             </div>
 
             {uploadError && (
-              <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg">{uploadError}</p>
+              <p className="text-[12px] text-terracotta bg-terracotta/10 p-2.5 rounded-btn font-mono">
+                {uploadError}
+              </p>
             )}
 
             <form onSubmit={handleUploadSimulated} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[12px] font-semibold text-forest-ink/80 mb-1">
                   Document Title
                 </label>
                 <input
@@ -190,253 +215,228 @@ export default function LibraryPage() {
                   required
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
-                  placeholder="e.g. Grade 9 Science Unit 4"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+                  placeholder="e.g. Grade 11 Science Unit 5"
+                  className="w-full px-3 py-2 bg-white border border-pencil-gray/40 rounded-btn text-[13px] text-forest-ink focus:outline-none focus:border-forest-ink"
                 />
               </div>
 
-              <div className="p-4 border-2 border-dashed border-slate-200 rounded-xl text-center space-y-1.5 bg-slate-50/50">
-                <FileText className="w-7 h-7 mx-auto text-slate-400" />
-                <p className="text-xs text-slate-500">{t.library.dragDrop}</p>
+              <div className="p-4 border-2 border-dashed border-pencil-gray/40 rounded-btn text-center space-y-1.5 bg-whisper-gray/50">
+                <FileText className="w-6 h-6 mx-auto text-forest-ink/40" />
+                <p className="text-[11px] text-forest-ink/60">{t.library.dragDrop}</p>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={isUploading}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-xs transition-all flex items-center justify-center space-x-2 shadow-sm"
+                variant="primary"
+                size="sm"
+                className="w-full justify-center"
               >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Uploading & Queuing...</span>
-                  </>
-                ) : (
-                  <span>Upload & Index</span>
-                )}
-              </button>
+                {isUploading ? 'Uploading & Indexing...' : 'Upload & Index'}
+              </Button>
             </form>
-          </div>
+          </Card>
 
           {/* Document List */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Your Documents ({documents.length})
-            </h3>
+          <Card className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <MicroLabel>INDEXED TEXTBOOKS</MicroLabel>
+              <span className="text-[11px] font-mono text-forest-ink/50">
+                {documents.length} docs
+              </span>
+            </div>
 
             {documents.length === 0 ? (
-              <div className="text-center py-6 text-slate-400 text-xs">
+              <p className="text-center py-6 text-forest-ink/50 text-[13px]">
                 No documents uploaded yet.
-              </div>
+              </p>
             ) : (
               <div className="space-y-2">
                 {documents.map((doc) => {
                   const isSelected = selectedDoc?.id === doc.id;
-                  let badge = (
-                    <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {doc.status}
-                    </span>
-                  );
-                  if (doc.status === 'READY') {
-                    badge = (
-                      <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Ready
-                      </span>
-                    );
-                  }
-
                   return (
                     <div
                       key={doc.id}
                       onClick={() => setSelectedDoc(doc)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                      className={`p-3 rounded-btn border cursor-pointer transition-all ${
                         isSelected
-                          ? 'border-indigo-600 bg-indigo-50/50 shadow-xs'
-                          : 'border-slate-200 hover:bg-slate-50'
+                          ? 'bg-sticky-mint/40 border-forest-ink shadow-sm'
+                          : 'bg-cream-paper border-pencil-gray/30 hover:border-forest-ink/50'
                       }`}
                     >
-                      <div className="min-w-0 pr-2">
-                        <h4 className="font-semibold text-xs text-slate-900 truncate">
-                          {doc.title}
-                        </h4>
-                        <div className="mt-1 flex items-center space-x-2">{badge}</div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <h4 className="text-[14px] font-bold text-forest-ink line-clamp-1">
+                            {doc.title}
+                          </h4>
+                          <div className="flex items-center gap-2 text-[11px] font-mono text-forest-ink/50">
+                            <span className="uppercase">{doc.language || locale}</span>
+                            <span>•</span>
+                            <span>{doc.pageCount ? `${doc.pageCount} pages` : 'PDF'}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-tag text-[10px] font-mono font-semibold ${
+                              doc.status === 'READY'
+                                ? 'bg-forest-ink text-cream-paper'
+                                : 'bg-highlighter-yellow text-forest-ink'
+                            }`}
+                          >
+                            {doc.status}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(doc.id);
+                            }}
+                            className="p-1 text-forest-ink/30 hover:text-terracotta"
+                            title="Delete document"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(doc.id);
-                        }}
-                        className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   );
                 })}
               </div>
             )}
-          </div>
+          </Card>
         </div>
 
-        {/* Right Column: Selected Document Inspector */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Right Column: Document Details, Grounded Q&A, and Summaries (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
           {selectedDoc ? (
-            <div className="space-y-6">
-              {/* Document Overview Header */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">{selectedDoc.title}</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Language: <span className="uppercase font-semibold">{selectedDoc.language}</span>{' '}
-                      • Status: <span className="font-semibold">{selectedDoc.status}</span>
-                    </p>
+            <>
+              {/* Document Header Card */}
+              <Card className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Badge size="sm">ACTIVE TEXTBOOK</Badge>
+                    <MicroLabel>{selectedDoc.status}</MicroLabel>
                   </div>
-                  {selectedDoc.status === 'READY' && (
-                    <button
-                      onClick={handleGenerateQuiz}
-                      disabled={quizLoading}
-                      className="inline-flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{quizLoading ? 'Generating...' : t.library.generateQuiz}</span>
-                    </button>
-                  )}
+                  <h3 className="text-[20px] font-bold text-forest-ink font-sans">
+                    {selectedDoc.title}
+                  </h3>
+                  <p className="text-[13px] text-forest-ink/60 font-mono">
+                    ID: {selectedDoc.id.slice(0, 16)}... • Status: {selectedDoc.status}
+                  </p>
                 </div>
 
-                {quizGeneratedMsg && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
-                    <span>{quizGeneratedMsg}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={quizLoading || selectedDoc.status !== 'READY'}
+                    onClick={handleGenerateQuiz}
+                  >
+                    <GraduationCap className="w-3.5 h-3.5 mr-1" />
+                    {quizLoading ? 'Generating...' : 'Generate Quiz'}
+                  </Button>
+                  <Link href={`/study-room?docId=${selectedDoc.id}`}>
+                    <Button variant="primary" size="sm">
+                      <BrainCircuit className="w-3.5 h-3.5 mr-1" />
+                      Chat in Study Room
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
+
+              {quizGeneratedMsg && (
+                <div className="p-3 bg-sticky-mint/40 border border-forest-ink/30 rounded-btn text-[13px] font-semibold text-forest-ink flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-forest-ink" />
+                  <span>{quizGeneratedMsg}</span>
+                </div>
+              )}
+
+              {/* Grounded Textbook Q&A */}
+              <Card className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Search className="w-4 h-4 text-forest-ink" />
+                    <h4 className="text-[16px] font-bold text-forest-ink font-sans">
+                      Ask Questions Grounded in this Document
+                    </h4>
                   </div>
-                )}
+                  <Badge size="sm">CITATION VERIFIED</Badge>
+                </div>
 
-                {/* Status Callout if still processing */}
-                {selectedDoc.status !== 'READY' && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center space-x-3">
-                    <Loader2 className="w-5 h-5 animate-spin shrink-0 text-amber-600" />
-                    <div>
-                      <p className="font-semibold">{t.library.statusProcessing}</p>
-                      <p className="text-amber-700 mt-0.5">
-                        Our knowledge worker is extracting pages, cleaning OCR artifacts, and generating pgvector embeddings.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                <form onSubmit={handleAskQuestion} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={qaQuery}
+                    onChange={(e) => setQaQuery(e.target.value)}
+                    placeholder="e.g. What are the key stages of cellular division in unit 4?"
+                    className="flex-1 bg-white border border-pencil-gray/40 rounded-btn px-4 py-2 text-[14px] text-forest-ink focus:outline-none focus:border-forest-ink"
+                  />
+                  <Button type="submit" variant="primary" size="sm" disabled={qaLoading}>
+                    {qaLoading ? 'Searching...' : 'Ask'}
+                  </Button>
+                </form>
 
-                {/* Hierarchical Summary View */}
-                {selectedDoc.status === 'READY' && (
-                  <div className="space-y-4 pt-2">
-                    <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
-                      <BookOpen className="w-4 h-4 text-indigo-600" />
-                      <span>{t.library.summary}</span>
-                    </h3>
+                {qaAnswer && (
+                  <div className="p-4 bg-whisper-gray/70 rounded-btn border border-pencil-gray/30 space-y-3">
+                    <p className="text-[14px] text-forest-ink leading-relaxed font-sans">
+                      {qaAnswer.answer}
+                    </p>
 
-                    {summaries.length === 0 ? (
-                      <p className="text-xs text-slate-500">
-                        Document executive summary indexed. Ask questions below to test grounded retrieval.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {summaries.map((s, idx) => (
-                          <div
-                            key={idx}
-                            className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5"
+                    {qaAnswer.citations && qaAnswer.citations.length > 0 && (
+                      <div className="pt-2 border-t border-pencil-gray/20 flex flex-wrap gap-2 items-center">
+                        <MicroLabel>VERIFIED CITATIONS:</MicroLabel>
+                        {qaAnswer.citations.map((c: any, i: number) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 rounded-tag bg-highlighter-yellow/50 text-[11px] font-mono font-semibold text-forest-ink"
                           >
-                            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                              <span>{s.sectionTitle || 'Section Summary'}</span>
-                              <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                                {s.level}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-                              {s.content}
-                            </p>
-                          </div>
+                            Page {c.page || c.pageNumber}
+                          </span>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
-              </div>
+              </Card>
 
-              {/* Grounded Q&A Card */}
-              {selectedDoc.status === 'READY' && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-                  <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
-                    <Search className="w-4 h-4 text-indigo-600" />
-                    <span>{t.library.askQuestion}</span>
-                  </h3>
-
-                  <form onSubmit={handleAskQuestion} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={qaQuery}
-                      onChange={(e) => setQaQuery(e.target.value)}
-                      placeholder="Ask any question grounded in this document..."
-                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                    />
-                    <button
-                      type="submit"
-                      disabled={qaLoading}
-                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-xs transition-colors shrink-0"
-                    >
-                      {qaLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Ask'}
-                    </button>
-                  </form>
-
-                  {/* Grounded Response & Page Citations */}
-                  {qaAnswer && (
-                    <div
-                      className={`p-4 rounded-xl border space-y-3 ${
-                        qaAnswer.isUncertain
-                          ? 'bg-amber-50/70 border-amber-200'
-                          : 'bg-indigo-50/40 border-indigo-100'
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                          Verified Answer
-                        </span>
-                        <p className="text-xs text-slate-800 font-medium leading-relaxed">
-                          {qaAnswer.answer}
+              {/* Chapter Summaries */}
+              <Card className="p-6 space-y-4">
+                <MicroLabel>CHAPTER SUMMARIES & KEY TAKEAWAYS</MicroLabel>
+                {summaries.length === 0 ? (
+                  <p className="text-[14px] text-forest-ink/60">
+                    {selectedDoc.status === 'READY'
+                      ? 'Summaries are being generated by the background knowledge worker.'
+                      : 'Upload processing must complete before summaries are available.'}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {summaries.map((sum, i) => (
+                      <div
+                        key={i}
+                        className="p-4 rounded-btn border border-pencil-gray/30 bg-white space-y-2"
+                      >
+                        <h5 className="text-[15px] font-bold text-forest-ink">
+                          {sum.title || `Chapter Summary ${i + 1}`}
+                        </h5>
+                        <p className="text-[13px] text-forest-ink/80 leading-relaxed">
+                          {sum.content}
                         </p>
                       </div>
-
-                      {/* Verified Citations List */}
-                      {qaAnswer.citations?.length > 0 && (
-                        <div className="pt-2 border-t border-slate-200/60 space-y-2">
-                          <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                            {t.library.citations}:
-                          </span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {qaAnswer.citations.map((c: any, cIdx: number) => (
-                              <div
-                                key={cIdx}
-                                className="p-2.5 bg-white rounded-lg border border-slate-200 text-[11px] space-y-1"
-                              >
-                                <span className="font-bold text-indigo-600">
-                                  Page {c.pageNumber}
-                                </span>
-                                <p className="text-slate-600 line-clamp-2 italic">
-                                  &quot;{c.snippet}&quot;
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </>
           ) : (
-            <div className="bg-white rounded-2xl p-12 border border-slate-200 text-center space-y-3 text-slate-400">
-              <BookOpen className="w-12 h-12 mx-auto text-slate-300" />
-              <p className="text-sm font-medium">Select a document from the left or upload a new PDF.</p>
-            </div>
+            <Card className="p-10 text-center text-forest-ink/60 flex flex-col items-center justify-center space-y-4">
+              <StorysetLibraryBooks className="w-56 h-56 mx-auto" />
+              <div className="space-y-1">
+                <h4 className="text-[18px] font-bold text-forest-ink">No Textbook Selected</h4>
+                <p className="text-[14px] text-forest-ink/65 max-w-sm">
+                  Select a document from the left or upload a PDF textbook to browse summaries and ask citation-grounded questions.
+                </p>
+              </div>
+            </Card>
           )}
         </div>
       </div>

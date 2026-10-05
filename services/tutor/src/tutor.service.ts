@@ -142,13 +142,29 @@ export class TutorService {
         console.warn('[TutorService] Knowledge grounded QA failed, falling back:', err.message);
       }
     } else {
-      // General tutoring response in student's language
-      if (session.language === 'si') {
-        tutorAnswer = `ඔබගේ විමසීම: "${content}". ශ්‍රී ලංකා විෂය නිර්දේශයේ මූලික නීති හා සංකල්ප අනුව මෙය සරලව තේරුම් ගත හැක. උදාහරණයක් ලෙස විභාග ප්‍රශ්න පත්‍රවල නිතර අසන ප්‍රධාන කොටසකි.`;
-      } else if (session.language === 'ta') {
-        tutorAnswer = `உங்கள் கேள்வி: "${content}". இலங்கை தேசிய பாடத்திட்டத்தின் அடிப்படையில் இது ஒரு முக்கியமான தலைப்பாகும். நீங்கள் மேலதிக விளக்கங்களைப் பெறலாம்.`;
-      } else {
-        tutorAnswer = `Regarding "${content}": This is a core competency under the Sri Lankan national curriculum. Would you like me to walk through a worked example or provide a practice question?`;
+      // Route through central AI Gateway for Socratic tutoring
+      try {
+        const aiRes = await this.resilientAiClient.post(
+          '/ai/chat',
+          {
+            task: 'socratic_tutor',
+            language: session.language,
+            messages: [{ role: 'user', content }],
+          },
+          user,
+        );
+        if (aiRes.data?.content) {
+          tutorAnswer = aiRes.data.content;
+        }
+      } catch (err: any) {
+        // Fallback to deterministic curriculum response
+        if (session.language === 'si') {
+          tutorAnswer = `ඔබගේ විමසීම: "${content}". ශ්‍රී ලංකා විෂය නිර්දේශයේ මූලික නීති හා සංකල්ප අනුව මෙය සරලව තේරුම් ගත හැක. උදාහරණයක් ලෙස විභාග ප්‍රශ්න පත්‍රවල නිතර අසන ප්‍රධාන කොටසකි.`;
+        } else if (session.language === 'ta') {
+          tutorAnswer = `உங்கள் கேள்வி: "${content}". இலங்கை தேசிய பாடத்திட்டத்தின் அடிப்படையில் இது ஒரு முக்கியமான தலைப்பாகும். நீங்கள் மேலதிக விளக்கங்களைப் பெறலாம்.`;
+        } else {
+          tutorAnswer = `Regarding "${content}": This is a core competency under the Sri Lankan national curriculum. Would you like me to walk through a worked example or provide a practice question?`;
+        }
       }
     }
 
